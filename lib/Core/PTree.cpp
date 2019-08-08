@@ -16,7 +16,10 @@
 
 using namespace klee;
 
-PTree::PTree(const data_type &root) : root(new Node(nullptr, root)) {}
+PTree::PTree(const data_type &root)
+  : root(new Node(nullptr, root)), csvOutputFile{"klee-last/tree.csv"} {
+    csvOutputFile << "parent,child\n";
+  }
 
 std::pair<PTreeNode*, PTreeNode*>
 PTree::split(Node *n, 
@@ -25,7 +28,16 @@ PTree::split(Node *n,
   assert(n && !n->left && !n->right);
   n->left = new Node(n, leftData);
   n->right = new Node(n, rightData);
+
+  printChildrenToCsv(n);
+
   return std::make_pair(n->left, n->right);
+}
+
+void PTree::printChildrenToCsv(Node *parent) {
+  assert(parent && parent->left && parent->right);
+  csvOutputFile << "\"" << parent << "\",\"" << parent->left << "\"\n";
+  csvOutputFile << "\"" << parent << "\",\"" << parent->right << "\"\n";
 }
 
 void PTree::remove(Node *n) {

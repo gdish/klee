@@ -12,6 +12,8 @@
 
 #include "klee/Expr/Expr.h"
 
+#include <fstream>
+
 namespace klee {
   class ExecutionState;
 
@@ -31,6 +33,10 @@ namespace klee {
     void remove(Node *n);
 
     void dump(llvm::raw_ostream &os);
+
+  private:
+    std::ofstream csvOutputFile;
+    void printChildrenToCsv(Node *parent);
   };
 
   class PTreeNode {
