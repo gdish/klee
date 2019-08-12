@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <iostream>
 #include "UserSearcher.h"
 
 #include "Searcher.h"
@@ -108,7 +109,8 @@ bool klee::userSearcherRequiresMD2U() {
 Searcher *getNewSearcher(Searcher::CoreSearchType type, Executor &executor) {
   Searcher *searcher = NULL;
   switch (type) {
-  case Searcher::DFS: searcher = new DFSSearcher(); break;
+ // case Searcher::DFS: searcher = new DFSSearcher(); break;
+    //case Searcher::DFS: searcher = new ProfileGuidedDFSearcher(); std::cout<<"Using DFS\n"; break;
   case Searcher::BFS: searcher = new BFSSearcher(); break;
   case Searcher::RandomState: searcher = new RandomSearcher(); break;
   case Searcher::RandomPath: searcher = new RandomPathSearcher(executor); break;

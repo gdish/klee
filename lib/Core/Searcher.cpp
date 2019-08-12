@@ -31,9 +31,13 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
 
+
 #include <cassert>
 #include <fstream>
 #include <climits>
+#include <fstream>
+#include <iostream>
+
 
 using namespace klee;
 using namespace llvm;
@@ -462,4 +466,61 @@ void InterleavedSearcher::update(
   for (std::vector<Searcher*>::const_iterator it = searchers.begin(),
          ie = searchers.end(); it != ie; ++it)
     (*it)->update(current, addedStates, removedStates);
+}
+
+ProfileGuidedDFSearcher::ProfileGuidedDFSearcher() {
+  std::ifstream i(filename);
+  i >> file;
+
+  std::cout << "Hello there.\n";
+
+  for (const auto& item : file["data"]) {
+    for (const auto &item2 : item["files"]) {
+      segments = item2["segments"].get < std::vector<std::vector<int>>>();
+      break;
+    }
+    break;
+  }
+
+  std::cout << "Output is: \n";
+
+  for (int i = 0; i < segments.size(); i++) {
+    for (int j = 0; j < segments[i].size(); j++)
+      std::cout << segments[i][j] << " ";
+    std::cout << "\n";
+  }
+}
+
+ExecutionState &ProfileGuidedDFSearcher::selectState() {
+  return *states.back();
+}
+
+void ProfileGuidedDFSearcher::update(ExecutionState *current,
+                         const std::vector<ExecutionState *> &addedStates,
+                         const std::vector<ExecutionState *> &removedStates) {
+  states.insert(states.end(),
+                addedStates.begin(),
+                addedStates.end());
+  for (std::vector<ExecutionState *>::const_iterator it = removedStates.begin(),
+           ie = removedStates.end();
+       it != ie; ++it) {
+    ExecutionState *es = *it;
+    if (es == states.back()) {
+      states.pop_back();
+    } else {
+      bool ok = false;
+
+      for (std::vector<ExecutionState*>::iterator it = states.begin(),
+               ie = states.end(); it != ie; ++it) {
+        if (es==*it) {
+          states.erase(it);
+          ok = true;
+          break;
+        }
+      }
+
+      (void) ok;
+      assert(ok && "invalid state removed");
+    }
+  }
 }

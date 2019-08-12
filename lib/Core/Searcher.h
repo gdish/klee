@@ -13,6 +13,7 @@
 #include "klee/Internal/System/Time.h"
 
 #include "llvm/Support/raw_ostream.h"
+#include "/home/kenny/UROP2019/packages/json/single_include/nlohmann/json.hpp"
 
 #include <map>
 #include <queue>
@@ -283,6 +284,28 @@ namespace klee {
     }
   };
 
+  class ProfileGuidedDFSearcher : public Searcher {
+    using json = nlohmann::json;
+
+    std::vector<ExecutionState*> states;
+    std::string filename = "/home/kenny/UROP2019/Profiling_Stuff/test.json";
+    json file;
+    std::vector<std::vector<int>> segments;
+
+  public:
+    ExecutionState &selectState();
+    ProfileGuidedDFSearcher();
+    void update(ExecutionState *current,
+                const std::vector<ExecutionState *> &addedStates,
+                const std::vector<ExecutionState *> &removedStates);
+    bool empty() { return states.empty(); }
+    void printName(llvm::raw_ostream &os) {
+      os << "Profile guided DFSSearcher\n";
+    }
+
+  };
+
 }
+
 
 #endif /* KLEE_SEARCHER_H */
