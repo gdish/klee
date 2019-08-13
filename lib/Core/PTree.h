@@ -48,6 +48,8 @@ namespace klee {
     ExecutionState *data = nullptr;
 
   private:
+    static int nextIndex;
+    int creationIndex;
     PTreeNode(PTreeNode * parent, ExecutionState * data);
     ~PTreeNode() = default;
   };

@@ -9,17 +9,19 @@
 
 #include "PTree.h"
 
+#include "klee/ExecutionState.h"
 #include "klee/Expr/Expr.h"
 #include "klee/Expr/ExprPPrinter.h"
+#include "klee/Internal/Module/KInstruction.h"
 
 #include <vector>
 
 using namespace klee;
 
 PTree::PTree(const data_type &root)
-  : root(new Node(nullptr, root)), csvOutputFile{"klee-last/tree.csv"} {
-    csvOutputFile << "parent,child\n";
-  }
+    : root(new Node(nullptr, root)), csvOutputFile{"klee-last/tree.csv"} {
+  csvOutputFile << "parent,child,location\n";
+}
 
 std::pair<PTreeNode*, PTreeNode*>
 PTree::split(Node *n, 
@@ -36,8 +38,12 @@ PTree::split(Node *n,
 
 void PTree::printChildrenToCsv(Node *parent) {
   assert(parent && parent->left && parent->right);
-  csvOutputFile << "\"" << parent << "\",\"" << parent->left << "\"\n";
-  csvOutputFile << "\"" << parent << "\",\"" << parent->right << "\"\n";
+  auto left = parent->left;
+  auto right = parent->right;
+  csvOutputFile << parent->creationIndex << "," << left->creationIndex << ","
+                << left->data->prevPC->getSourceLocation() << "\n";
+  csvOutputFile << parent->creationIndex << "," << right->creationIndex << ","
+                << right->data->prevPC->getSourceLocation() << "\n";
 }
 
 void PTree::remove(Node *n) {
@@ -89,6 +95,8 @@ void PTree::dump(llvm::raw_ostream &os) {
   delete pp;
 }
 
+int PTreeNode::nextIndex = 0;
+
 PTreeNode::PTreeNode(PTreeNode * parent, ExecutionState * data)
-  : parent{parent}, data{data} {}
+  : parent{parent}, data{data}, creationIndex{nextIndex++}{}
 
