@@ -32,6 +32,7 @@ cl::list<Searcher::CoreSearchType> CoreSearch(
              "with nurs:covnew)"),
     cl::values(
         clEnumValN(Searcher::DFS, "dfs", "use Depth First Search (DFS)"),
+        clEnumValN(Searcher::ProfileGuided, "pg", "use Profile Guided"),
         clEnumValN(Searcher::BFS, "bfs",
                    "use Breadth First Search (BFS), where scheduling decisions "
                    "are taken at the level of (2-way) forks"),
@@ -112,6 +113,7 @@ Searcher *getNewSearcher(Searcher::CoreSearchType type, Executor &executor) {
   case Searcher::BFS: searcher = new BFSSearcher(); break;
   case Searcher::RandomState: searcher = new RandomSearcher(); break;
   case Searcher::RandomPath: searcher = new RandomPathSearcher(executor); break;
+  case Searcher::ProfileGuided: searcher = new ProfileGuidedSearcher(executor); break;
   case Searcher::NURS_CovNew: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::CoveringNew); break;
   case Searcher::NURS_MD2U: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::MinDistToUncovered); break;
   case Searcher::NURS_Depth: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::Depth); break;

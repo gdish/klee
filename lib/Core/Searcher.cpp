@@ -34,6 +34,7 @@
 #include <cassert>
 #include <fstream>
 #include <climits>
+#include <iostream>
 
 using namespace klee;
 using namespace llvm;
@@ -292,6 +293,43 @@ RandomPathSearcher::update(ExecutionState *current,
 bool RandomPathSearcher::empty() { 
   return executor.states.empty(); 
 }
+
+///
+ProfileGuidedSearcher::ProfileGuidedSearcher(Executor &_executor)
+    : executor(_executor) {}
+
+ProfileGuidedSearcher::~ProfileGuidedSearcher() {}
+
+ExecutionState &ProfileGuidedSearcher::selectState() {
+  PTree::Node *n = executor.processTree->root;
+  while (!n->data) {
+    if (!n->left) {
+      n = n->right;
+    } else if (!n->right) {
+      n = n->left;
+    } else {
+      if (n->left->data && n->right->data) {
+        uint64_t leftWeight, rightWeight;
+        n->left->data->prevPC->inst->extractProfMetadata(leftWeight, rightWeight);
+        std::cout << "left: " << leftWeight << "\n";
+        std::cout << "right: " << rightWeight << "\n";
+        // n->data->prevPC->inst->extractProfMetadata(trueWeight, falseWeight);
+        n = leftWeight > rightWeight ? n->left : n->right;
+      } else {
+        std::cout << "not both true\n";
+        n = n->left;
+      }
+    }
+  }
+
+  return *n->data;
+}
+
+void ProfileGuidedSearcher::update(
+    ExecutionState *current, const std::vector<ExecutionState *> &addedStates,
+    const std::vector<ExecutionState *> &removedStates) {}
+
+bool ProfileGuidedSearcher::empty() { return executor.states.empty(); }
 
 ///
 
