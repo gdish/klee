@@ -167,18 +167,18 @@ namespace klee {
     }
   };
 
+
+
   class ProfileGuidedSearcher : public Searcher {
-    Executor &executor;
+    std::vector<ExecutionState *> states;
+    uint64_t getBranchWeight(ExecutionState * state);
 
   public:
-    ProfileGuidedSearcher(Executor &_executor);
-    ~ProfileGuidedSearcher();
-
     ExecutionState &selectState();
     void update(ExecutionState *current,
                 const std::vector<ExecutionState *> &addedStates,
                 const std::vector<ExecutionState *> &removedStates);
-    bool empty();
+    bool empty() { return states.empty(); }
     void printName(llvm::raw_ostream &os) {
       os << "ProfileGuidedSearcher\n";
     }
