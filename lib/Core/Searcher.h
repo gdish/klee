@@ -75,6 +75,7 @@ namespace klee {
       BFS,
       RandomState,
       RandomPath,
+      ProfileGuided,
       NURS_CovNew,
       NURS_MD2U,
       NURS_Depth,
@@ -164,6 +165,23 @@ namespace klee {
       case CoveringNew        : os << "CoveringNew\n"; return;
       default                 : os << "<unknown type>\n"; return;
       }
+    }
+  };
+
+  class ProfileGuidedSearcher : public Searcher {
+    Executor &executor;
+
+  public:
+    ProfileGuidedSearcher(Executor &_executor);
+    ~ProfileGuidedSearcher();
+
+    ExecutionState &selectState();
+    void update(ExecutionState *current,
+                const std::vector<ExecutionState *> &addedStates,
+                const std::vector<ExecutionState *> &removedStates);
+    bool empty();
+    void printName(llvm::raw_ostream &os) {
+      os << "ProfileGuidedSearcher\n";
     }
   };
 
