@@ -6,11 +6,8 @@
 # License. See LICENSE.TXT for details.
 #
 #===------------------------------------------------------------------------===#
-add_subdirectory(gen-bout)
-add_subdirectory(gen-random-bout)
-add_subdirectory(kleaver)
-add_subdirectory(klee)
-add_subdirectory(klee-replay)
-add_subdirectory(klee-stats)
-add_subdirectory(ktest-tool)
-add_subdirectory(klee-pgo)
+install(PROGRAMS klee-pgo DESTINATION bin)
+
+# Copy into the build directory's binary directory
+# so system tests can find it
+configure_file(klee-pgo "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/klee-pgo" COPYONLY)

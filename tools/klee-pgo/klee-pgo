@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+
+# ===-- klee-stats --------------------------------------------------------===##
+#
+#                      The KLEE Symbolic Virtual Machine
+#
+#  This file is distributed under the University of Illinois Open Source
+#  License. See LICENSE.TXT for details.
+#
+# ===----------------------------------------------------------------------===##
+
+"""Interface for experimenting with profiling"""
+
+import argparse
+import os
+
+def main():
+    parser = argparse.ArgumentParser(description='Run C program on Klee')
+    parser.add_argument('file', type=str, nargs=1, help='.c file')
+    parser.add_argument('profdata', type=str, nargs='+', help='profile data files or folders')
+    parser.add_argument('numArgs', type=int , nargs=1, help="Number of sym-args when running with klee")
+
+    args = parser.parse_args()
+    file = args.file[0]
+    numArgs = args.numArgs[0]
+    fileWithoutExt = file.split('.')[0]
+    profileData = args.profdata
+    mergedProfileFile = "main.profdata"
+
+    #Merge profile data
+    os.system("llvm-profdata-6.0 merge -output=" + mergedProfileFile + " " + ' '.join(profileData))
+
+    #Compile C program with merged profile files
+    os.system("clang-6.0 -g -fprofile-instr-use=" + mergedProfileFile + " -c -emit-llvm " + file)
+
+    print("File is: ", fileWithoutExt, " and ", file, " and", file.split('.'))
+
+    #Assemble readable asm to .bc- will fail if it already created a .bc file but not issue
+    os.system("llvm-as-6.0 " + fileWithoutExt + ".ll")
+
+    #run with klee
+    os.system("klee --optimize --libc=uclibc --posix-runtime " + fileWithoutExt + ".bc " + " --sym-arg " + str(numArgs))
+
+
+main()
