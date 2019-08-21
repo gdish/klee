@@ -35,6 +35,7 @@
 #include <fstream>
 #include <climits>
 #include <iostream>
+#include <cstdlib>
 
 using namespace klee;
 using namespace llvm;
@@ -295,41 +296,88 @@ bool RandomPathSearcher::empty() {
 }
 
 ///
-ProfileGuidedSearcher::ProfileGuidedSearcher(Executor &_executor)
-    : executor(_executor) {}
 
-ProfileGuidedSearcher::~ProfileGuidedSearcher() {}
+uint64_t ProfileGuidedSearcher::getBranchWeight(ExecutionState *state) {
+    auto parent = state->ptreeNode->parent;
+    bool isLeft = parent->left == state->ptreeNode;
+
+    uint64_t leftWeight, rightWeight;
+    state->prevPC->inst->extractProfMetadata(leftWeight, rightWeight);
+    return isLeft ? leftWeight : rightWeight;
+}
 
 ExecutionState &ProfileGuidedSearcher::selectState() {
-  PTree::Node *n = executor.processTree->root;
-  while (!n->data) {
-    if (!n->left) {
-      n = n->right;
-    } else if (!n->right) {
-      n = n->left;
-    } else {
-      if (n->left->data && n->right->data) {
-        uint64_t leftWeight, rightWeight;
-        n->left->data->prevPC->inst->extractProfMetadata(leftWeight, rightWeight);
-        std::cout << "left: " << leftWeight << "\n";
-        std::cout << "right: " << rightWeight << "\n";
-        // n->data->prevPC->inst->extractProfMetadata(trueWeight, falseWeight);
-        n = leftWeight > rightWeight ? n->left : n->right;
-      } else {
-        std::cout << "not both true\n";
-        n = n->left;
-      }
+  if (states.size() == 1) {
+    return *states.back();
+  }
+
+  auto currentState = states.front();
+  uint64_t currentWeight = getBranchWeight(currentState);
+  for (auto state : states) {
+    if (getBranchWeight(state) > currentWeight) {
+      currentState = state;
+      currentWeight = getBranchWeight(state);
     }
   }
 
-  return *n->data;
+  return *states.back();
 }
 
-void ProfileGuidedSearcher::update(
-    ExecutionState *current, const std::vector<ExecutionState *> &addedStates,
-    const std::vector<ExecutionState *> &removedStates) {}
+void ProfileGuidedSearcher::update(ExecutionState *current,
+                         const std::vector<ExecutionState *> &addedStates,
+                         const std::vector<ExecutionState *> &removedStates) {
+  states.insert(states.end(),
+                addedStates.begin(),
+                addedStates.end());
+  for (std::vector<ExecutionState *>::const_iterator it = removedStates.begin(),
+                                                     ie = removedStates.end();
+       it != ie; ++it) {
+    ExecutionState *es = *it;
+    if (es == states.back()) {
+      states.pop_back();
+    } else {
+      bool ok = false;
 
-bool ProfileGuidedSearcher::empty() { return executor.states.empty(); }
+      for (std::vector<ExecutionState*>::iterator it = states.begin(),
+             ie = states.end(); it != ie; ++it) {
+        if (es==*it) {
+          states.erase(it);
+          ok = true;
+          break;
+        }
+      }
+
+      (void) ok;
+      assert(ok && "invalid state removed");
+    }
+  }
+}
+
+//ExecutionState &ProfileGuidedSearcher::selectState() {
+//  PTree::Node *n = executor.processTree->root;
+//  while (!n->data) {
+//    if (!n->left) {
+//      n = n->right;
+//    } else if (!n->right) {
+//      n = n->left;
+//    } else {
+//      if (n->left->data && n->right->data) {
+//        uint64_t leftWeight, rightWeight;
+//        if (n->left->data->prevPC->inst->extractProfMetadata(leftWeight, rightWeight)) {
+//          n = leftWeight > rightWeight ? n->left : n->right;
+//        } else {
+//          std::cerr << "No profiling data found, cannot run profile guided searcher\n";
+//          std::exit(EXIT_FAILURE);
+//        }
+//      } else {
+//        std::cout << "not both true\n";
+//        n = n->left;
+//      }
+//    }
+//  }
+//
+//  return *n->data;
+//}
 
 ///
 
