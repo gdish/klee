@@ -14,33 +14,60 @@
 
 import argparse
 import os
+import sqlite3
+
+class KleeStats(object):
+    def __init__(self, cursor):
+        self.cursor = cursor
+        self.cursor.execute("SELECT Instructions, CoveredInstructions, UncoveredInstructions FROM stats ORDER BY Instructions DESC LIMIT 1")
+
+        data = self.cursor.fetchone() 
+        self.coveredInstructions = data[1]
+        self.uncoveredInstructions = data[2]
+
+    def instructionsCoverage(self):
+        return (self.coveredInstructions/(self.coveredInstructions+self.uncoveredInstructions))*100
+        
 
 def main():
+    runCoreutils = False 
     parser = argparse.ArgumentParser(description='Run C program on Klee')
     parser.add_argument('file', type=str, nargs=1, help='.c file')
     parser.add_argument('profdata', type=str, nargs='+', help='profile data files or folders')
     parser.add_argument('numArgs', type=int , nargs=1, help="Number of sym-args when running with klee")
 
+
     args = parser.parse_args()
     file = args.file[0]
     numArgs = args.numArgs[0]
     fileWithoutExt = file.split('.')[0]
-    profileData = args.profdata
-    mergedProfileFile = "main.profdata"
 
-    #Merge profile data
-    os.system("llvm-profdata-6.0 merge -output=" + mergedProfileFile + " " + ' '.join(profileData))
+    if !runCoreutils:
+        profileData = args.profdata
+        mergedProfileFile = "main.profdata"
 
-    #Compile C program with merged profile files
-    os.system("clang-6.0 -g -fprofile-instr-use=" + mergedProfileFile + " -c -emit-llvm " + file)
+        #Merge profile data
+        os.system("llvm-profdata-6.0 merge -output=" + mergedProfileFile + " " + ' '.join(profileData))
 
-    print("File is: ", fileWithoutExt, " and ", file, " and", file.split('.'))
+        #Compile C program with merged profile files
+        os.system("clang-6.0 -g -fprofile-instr-use=" + mergedProfileFile + " -c -emit-llvm " + file)
 
-    #Assemble readable asm to .bc- will fail if it already created a .bc file but not issue
-    os.system("llvm-as-6.0 " + fileWithoutExt + ".ll")
+        print("File is: ", fileWithoutExt, " and ", file, " and", file.split('.'))
 
-    #run with klee
-    os.system("klee --optimize --libc=uclibc --posix-runtime " + fileWithoutExt + ".bc " + " --sym-arg " + str(numArgs))
+        #Assemble readable asm to .bc- will fail if it already created a .bc file but not issue
+        os.system("llvm-as-6.0 " + fileWithoutExt + ".ll")
 
+        #run with klee
+        os.system("klee --optimize --libc=uclibc --posix-runtime " + fileWithoutExt + ".bc " + " --sym-arg " + str(numArgs))
+        stats = sqlite3.connect("klee-last/run.stats")
+        c = stats.cursor()
+        statsData = KleeStats(c)
+        print("Instruction Coverage Default Searcher: ", statsData.instructionsCoverage())
+        #From database need to calculate these values:
+        #Instruction Coverage = (CoveredInstructions / (CoveredInstructions + UnCoveredInstructions))x100
+        #Branch coverage (need to get this)
+     else:
+         pass
 
+    
 main()
