@@ -36,13 +36,12 @@ def main():
     parser.add_argument('profdata', type=str, nargs='+', help='profile data files or folders')
     parser.add_argument('numArgs', type=int , nargs=1, help="Number of sym-args when running with klee")
 
-
     args = parser.parse_args()
     file = args.file[0]
     numArgs = args.numArgs[0]
     fileWithoutExt = file.split('.')[0]
 
-    if !runCoreutils:
+    if not runCoreutils:
         profileData = args.profdata
         mergedProfileFile = "main.profdata"
 
@@ -64,10 +63,10 @@ def main():
         statsData = KleeStats(c)
         print("Instruction Coverage Default Searcher: ", statsData.instructionsCoverage())
         #From database need to calculate these values:
-        #Instruction Coverage = (CoveredInstructions / (CoveredInstructions + UnCoveredInstructions))x100
         #Branch coverage (need to get this)
-     else:
-         pass
+    else:
+        #Need to compile coreutils programs with instrumentation
+        pass
 
     
 main()

@@ -81,7 +81,9 @@ namespace klee {
       NURS_Depth,
       NURS_ICnt,
       NURS_CPICnt,
-      NURS_QC
+      NURS_QC,
+      NURS_BC,
+      NURS_IBC
     };
   };
 
@@ -135,7 +137,9 @@ namespace klee {
       InstCount,
       CPInstCount,
       MinDistToUncovered,
-      CoveringNew
+      CoveringNew,
+      BranchCount,
+      InvBranchCount
     };
 
   private:
@@ -172,10 +176,10 @@ namespace klee {
 
   class ProfileGuidedSearcher : public Searcher {
     std::vector<ExecutionState *> states;
-    uint64_t getBranchWeight(ExecutionState * state);
 
   public:
     ExecutionState &selectState();
+    static uint64_t getBranchWeight(ExecutionState * state);
     void update(ExecutionState *current,
                 const std::vector<ExecutionState *> &addedStates,
                 const std::vector<ExecutionState *> &removedStates);

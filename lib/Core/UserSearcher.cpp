@@ -50,7 +50,11 @@ cl::list<Searcher::CoreSearchType> CoreSearch(
                    "use NURS with Instr-Count"),
         clEnumValN(Searcher::NURS_CPICnt, "nurs:cpicnt",
                    "use NURS with CallPath-Instr-Count"),
-        clEnumValN(Searcher::NURS_QC, "nurs:qc", "use NURS with Query-Cost")
+        clEnumValN(Searcher::NURS_QC, "nurs:qc", "use NURS with Query-Cost"),
+
+        clEnumValN(Searcher::NURS_BC, "nurs:bc", "use NURS with branch count"),
+        clEnumValN(Searcher::NURS_IBC, "nurs:ibc", "use NURS with inverse branch count")
+
             KLEE_LLVM_CL_VAL_END),
     cl::cat(SearchCat));
 
@@ -110,8 +114,7 @@ bool klee::userSearcherRequiresMD2U() {
 Searcher *getNewSearcher(Searcher::CoreSearchType type, Executor &executor) {
   Searcher *searcher = NULL;
   switch (type) {
- // case Searcher::DFS: searcher = new DFSSearcher(); break;
-    //case Searcher::DFS: searcher = new ProfileGuidedDFSearcher(); std::cout<<"Using DFS\n"; break;
+  case Searcher::DFS: searcher = new DFSSearcher(); break;
   case Searcher::BFS: searcher = new BFSSearcher(); break;
   case Searcher::RandomState: searcher = new RandomSearcher(); break;
   case Searcher::RandomPath: searcher = new RandomPathSearcher(executor); break;
@@ -122,6 +125,8 @@ Searcher *getNewSearcher(Searcher::CoreSearchType type, Executor &executor) {
   case Searcher::NURS_ICnt: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::InstCount); break;
   case Searcher::NURS_CPICnt: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::CPInstCount); break;
   case Searcher::NURS_QC: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::QueryCost); break;
+  case Searcher::NURS_BC: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::BranchCount); break;
+  case Searcher::NURS_IBC: searcher = new WeightedRandomSearcher(WeightedRandomSearcher::InvBranchCount); break;
   }
 
   return searcher;

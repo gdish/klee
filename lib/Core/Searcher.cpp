@@ -170,7 +170,9 @@ WeightedRandomSearcher::WeightedRandomSearcher(WeightType _type)
   : states(new DiscretePDF<ExecutionState*>()),
     type(_type) {
   switch(type) {
-  case Depth: 
+  case Depth:
+  case BranchCount:
+  case InvBranchCount:
     updateWeights = false;
     break;
   case InstCount:
@@ -227,6 +229,11 @@ double WeightedRandomSearcher::getWeight(ExecutionState *es) {
       return invMD2U * invMD2U;
     }
   }
+  case BranchCount:
+    return es->branchProbability;
+
+  case InvBranchCount:
+    return es->inverseBranchProbability;
   }
 }
 

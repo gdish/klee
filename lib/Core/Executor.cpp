@@ -824,6 +824,7 @@ void Executor::branch(ExecutionState &state,
       es->ptreeNode->data = 0;
       std::pair<PTree::Node*,PTree::Node*> res = 
         processTree->split(es->ptreeNode, ns, es);
+
       ns->ptreeNode = res.first;
       es->ptreeNode = res.second;
     }
@@ -1079,6 +1080,8 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
     falseState->ptreeNode = res.first;
     trueState->ptreeNode = res.second;
 
+    addWeighting(current, falseState, trueState);
+
     if (pathWriter) {
       // Need to update the pathOS.id field of falseState, otherwise the same id
       // is used for both falseState and trueState.
@@ -1108,6 +1111,26 @@ Executor::fork(ExecutionState &current, ref<Expr> condition, bool isInternal) {
 
     return StatePair(trueState, falseState);
   }
+}
+
+
+void Executor::addWeighting(ExecutionState &current, ExecutionState *leftState, ExecutionState *rightState) {
+  leftState->branchProbability = current.branchProbability;
+  leftState->inverseBranchProbability = current.inverseBranchProbability;
+  rightState->branchProbability = current.branchProbability;
+  rightState->inverseBranchProbability = current.inverseBranchProbability;
+
+  uint64_t leftStateCount = ProfileGuidedSearcher::getBranchWeight(leftState);
+  uint64_t rightStateCount = ProfileGuidedSearcher::getBranchWeight(rightState);
+  uint64_t totalCount = leftStateCount + rightStateCount;
+
+  double leftProb = ((double) leftStateCount) / totalCount;
+  double rightProb = ((double) rightStateCount) / totalCount;
+
+  leftState->branchProbability *= leftProb;
+  leftState->inverseBranchProbability *= rightProb;
+  rightState->branchProbability *= rightProb;
+  rightState->inverseBranchProbability *= leftProb;
 }
 
 void Executor::addConstraint(ExecutionState &state, ref<Expr> condition) {

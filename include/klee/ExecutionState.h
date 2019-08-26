@@ -147,6 +147,12 @@ public:
   // The numbers of times this state has run through Executor::stepInstruction
   std::uint64_t steppedInstructions;
 
+  // Current probability of being at branch
+  double branchProbability;
+
+  // Inverse Probability
+  double inverseBranchProbability;
+
 private:
   ExecutionState() : ptreeNode(0) {}
 

@@ -549,6 +549,8 @@ public:
 
   /// Returns the errno location in memory of the state
   int *getErrnoLocation(const ExecutionState &state) const;
+
+  void addWeighting(ExecutionState &current, ExecutionState *leftState, ExecutionState *rightState);
 };
   
 } // End klee namespace
