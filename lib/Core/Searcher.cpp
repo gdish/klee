@@ -309,7 +309,10 @@ uint64_t ProfileGuidedSearcher::getBranchWeight(ExecutionState *state) {
     bool isLeft = parent->left == state->ptreeNode;
 
     uint64_t leftWeight, rightWeight;
-    state->prevPC->inst->extractProfMetadata(leftWeight, rightWeight);
+    if (!state->prevPC->inst->extractProfMetadata(leftWeight, rightWeight)) {
+      return 0;
+    }
+
     return isLeft ? leftWeight : rightWeight;
 }
 

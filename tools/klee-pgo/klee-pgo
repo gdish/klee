@@ -32,16 +32,16 @@ class KleeStats(object):
 def main():
     runCoreutils = False 
     parser = argparse.ArgumentParser(description='Run C program on Klee')
-    parser.add_argument('file', type=str, nargs=1, help='.c file')
-    parser.add_argument('profdata', type=str, nargs='+', help='profile data files or folders')
-    parser.add_argument('numArgs', type=int , nargs=1, help="Number of sym-args when running with klee")
+    parser.add_argument('-c', help="Using coreutils")
+    parser.add_argument('file', type=str, nargs=1, help='.c file or coreutils directory')
+    parser.add_argument('profdata', type=str, nargs='*', help='profile data files or folders')
+    parser.add_argument('numArgs', type=int , nargs='?', help="Number of sym-args when running with klee")
 
     args = parser.parse_args()
     file = args.file[0]
-    numArgs = args.numArgs[0]
-    fileWithoutExt = file.split('.')[0]
-
-    if not runCoreutils:
+    if args.c is None:
+        numArgs = args.numArgs[0]
+        fileWithoutExt = file.split('.')[0]
         profileData = args.profdata
         mergedProfileFile = "main.profdata"
 
@@ -66,7 +66,7 @@ def main():
         #Branch coverage (need to get this)
     else:
         #Need to compile coreutils programs with instrumentation
-        pass
+        print("Testing coreutils.")
 
     
 main()
