@@ -75,7 +75,8 @@ def getCoverage(path):
     statsData = KleeStats(c)
 
     return statsData.instructionsCoverage()
-    
+
+#Use gcov for coverage    
 def main():
     runCoreutils = False 
     parser = argparse.ArgumentParser(description='Run C program on Klee')
@@ -94,15 +95,17 @@ def main():
         runNoProfiling = "klee --optimize --libc=uclibc --posix-runtime " + path + " --sym-args 0 4 4"
         runWithProfiling = "klee -search nurs:bc --optimize --libc=uclibc --posix-runtime " + path + " --sym-args 0 4 4"
         process= subprocess.Popen([runWithProfiling], shell=True)
-        time.sleep(60)
+        time.sleep(180)
         process.terminate()
         coverage = getCoverage(directory+"/klee-last/run.stats")
         print("Coverage with profiling: ", coverage, "%")
         process = subprocess.Popen([runNoProfiling], shell=True)
-        time.sleep(60)
+        time.sleep(180)
         process.terminate()
-        coverage = getCoverage(directory+"/bootklee-last/run.stats")
+        coverage = getCoverage(directory+"/klee-last/run.stats")
         print("Coverage without profiling: ", coverage, "%")
+        print()
+
         
            
 main()
