@@ -27,6 +27,7 @@
 #include "klee/Internal/Support/ErrorHandling.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
@@ -309,11 +310,13 @@ uint64_t ProfileGuidedSearcher::getBranchWeight(ExecutionState *state) {
     bool isLeft = parent->left == state->ptreeNode;
 
     uint64_t leftWeight, rightWeight;
-    if (!state->prevPC->inst->extractProfMetadata(leftWeight, rightWeight)) {
-      return 0;
+    auto inst = state->prevPC->inst;
+    if (inst->getOpcode() == Instruction::Br &&
+        !inst->extractProfMetadata(leftWeight, rightWeight)) {
+      return 1;
     }
 
-    return isLeft ? leftWeight : rightWeight;
+    return (isLeft ? leftWeight : rightWeight) + 1;
 }
 
 ExecutionState &ProfileGuidedSearcher::selectState() {
